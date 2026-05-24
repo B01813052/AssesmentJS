@@ -3,57 +3,65 @@ const engine = new BABYLON.Engine(canvas, true);
 
 function createScene() {
     const scene = new BABYLON.Scene(engine);
-    scene.clearColor = new BABYLON.Color3(0.1, 0.1, 0.15); // Dark background
+    scene.clearColor = new BABYLON.Color3(0.1, 0.1, 0.15); 
     
-    // 1. Lighting
+    //lighting
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // 2. Enable Physics Engine
+    // pysiscs
     scene.enablePhysics(new BABYLON.Vector3(0, -9.81, 0), new BABYLON.CannonJSPlugin());
 
-    // 3. Create Ground
+    
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 40, height: 40}, scene);
-    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.5 }, scene);
+    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { 
+        mass: 0, 
+        restitution: 0.1, 
+        friction: 5 
+    }, scene);
     
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMat.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3); // Grey floor
+    groundMat.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3); 
     ground.material = groundMat;
 
-    // 4. THE MOVABLE PLAYER (Blue Sphere)
+    // player adding 
     const player = BABYLON.MeshBuilder.CreateSphere("player", {diameter: 2}, scene);
     player.position.y = 2;
     
     const playerMat = new BABYLON.StandardMaterial("playerMat", scene);
-    playerMat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 1.0); // Blue
+    playerMat.diffuseColor = new BABYLON.Color3(0.2, 0.5, 1.0); 
     player.material = playerMat;
     
-    // Give the player mass so physics affects it
-    player.physicsImpostor = new BABYLON.PhysicsImpostor(player, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 2, restitution: 0.4 }, scene);
+    player.physicsImpostor = new BABYLON.PhysicsImpostor(player, BABYLON.PhysicsImpostor.SphereImpostor, { 
+        mass: 2, 
+        restitution: 0.1, 
+        friction: 2 
+    }, scene);
 
-    // 5. INTERACTABLE OBJECTS (Red Boxes falling from sky)
+    // the objects
     for (let i = 0; i < 15; i++) {
         let box = BABYLON.MeshBuilder.CreateBox("box" + i, {size: 1.5}, scene);
         box.position = new BABYLON.Vector3((Math.random() * 20) - 10, 5 + i, (Math.random() * 20) - 10);
         
         const boxMat = new BABYLON.StandardMaterial("boxMat", scene);
-        boxMat.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.2); // Red
+        boxMat.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.2); 
         box.material = boxMat;
         
-        // Give boxes mass so the player can push them
         box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0.4 }, scene);
     }
 
-    // 6. Camera (Follows the player)
+   
     const camera = new BABYLON.FollowCamera("FollowCam", new BABYLON.Vector3(0, 15, -15), scene);
-    camera.lockedTarget = player; // Lock camera to player
-    camera.radius = 15; // Distance from player
-    camera.heightOffset = 8; // Height above player
-    camera.attachControl(canvas, true);
+    camera.lockedTarget = player; 
+    camera.radius = 15; 
+    camera.heightOffset = 8; 
+    camera.cameraAcceleration = 0.1; 
+    camera.maxCameraSpeed = 10;
 
-    // 7. KEYBOARD CONTROLS (Moving the player using physics)
+
+    // controls
     window.addEventListener("keydown", function (e) {
-        let force = 4; // How hard we push the player
+        let force = 6; // Increased push force to overcome the new friction
         let direction = new BABYLON.Vector3(0, 0, 0);
 
         if (e.key === "w" || e.key === "W" || e.key === "ArrowUp") direction.z = force;
@@ -61,9 +69,8 @@ function createScene() {
         if (e.key === "a" || e.key === "A" || e.key === "ArrowLeft") direction.x = -force;
         if (e.key === "d" || e.key === "D" || e.key === "ArrowRight") direction.x = force;
         
-        if (e.key === " ") direction.y = force * 2; // Spacebar to jump!
+        if (e.key === " ") direction.y = force * 2; 
 
-        // Apply the physical push to the center of the player
         player.physicsImpostor.applyImpulse(direction, player.getAbsolutePosition());
     });
 

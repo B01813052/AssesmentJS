@@ -1,86 +1,76 @@
-function createScene() {
-    const canvas = document.getElementById("renderCanvas");
-    const engine = new BABYLON.Engine(canvas, true);
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
 
+function createScene() {
     const scene = new BABYLON.Scene(engine);
 
-    //Camera 
-    const camera = new BABYLON.ArcRotateCamera(
-        "camera",
-        Math.PI / 2,
-        Math.PI / 3,
-        12,
-        BABYLON.Vector3.Zero(),
-        scene
-    );
+    //camera and lighting 
+    const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 3, 15, BABYLON.Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
+    
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0), scene);
+    light.intensity = 0.9;
 
-    //Lighting 
-    const light = new BABYLON.HemisphericLight(
-        "light",
-        new BABYLON.Vector3(1, 1, 0),
-        scene
-    );
-
-    //Skybox from textures folder 
-    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 100 }, scene);
-    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMat", scene);
-
-    skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("textures/skybox/skybox", scene);
-    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-    skyboxMaterial.disableLighting = true;
-
-    skybox.material = skyboxMaterial;
-
-    //Ground fomr texture folder 
-    const ground = BABYLON.MeshBuilder.CreateGround(
-        "ground",
-        { width: 30, height: 30 },
-        scene
-    );
-
+    
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 30, height: 30 }, scene);
     const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMat.diffuseTexture = new BABYLON.Texture("textures/floor.png", scene);
+    groundMat.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/floor.png", scene);
     ground.material = groundMat;
 
-    //cube from texture folder 
-    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 1 }, scene);
-    box.position.y = 0.5;
+    // the box to click
+    const box = BABYLON.MeshBuilder.CreateBox("box", { size: 2 }, scene);
+    box.position.y = 1;
 
     const boxMat = new BABYLON.StandardMaterial("boxMat", scene);
-    boxMat.diffuseTexture = new BABYLON.Texture("textures/cubehouse.png", scene);
+    boxMat.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/crate.png", scene);
     box.material = boxMat;
 
-    // wasd movement 
-    const input = { w: false, s: false, a: false, d: false };
+    
+    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-    window.addEventListener("keydown", function(evt) {
-        if (evt.key === "w") input.w = true;
-        if (evt.key === "s") input.s = true;
-        if (evt.key === "a") input.a = true;
-        if (evt.key === "d") input.d = true;
-    });
+    
+    const scoreText = new BABYLON.GUI.TextBlock();
+    scoreText.text = "Score: 0";
+    scoreText.color = "white";
+    scoreText.fontSize = 48;
+    scoreText.fontWeight = "bold";
+    scoreText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    scoreText.top = "20px"; 
+    
+    
+    advancedTexture.addControl(scoreText);
 
-    window.addEventListener("keyup", function(evt) {
-        if (evt.key === "w") input.w = false;
-        if (evt.key === "s") input.s = false;
-        if (evt.key === "a") input.a = false;
-        if (evt.key === "d") input.d = false;
-    });
+   
+    let score = 0;
 
-    scene.onBeforeRenderObservable.add(() => {
-        if (input.w) box.position.z -= 0.05;
-        if (input.s) box.position.z += 0.05;
-        if (input.a) box.position.x -= 0.05;
-        if (input.d) box.position.x += 0.05;
-    });
-
-    engine.runRenderLoop(() => {
-        scene.render();
-    });
+    
+    box.actionManager = new BABYLON.ActionManager(scene);
+    
+    
+    box.actionManager.registerAction(
+        new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, function () {
+            
+            //update score
+            score++; 
+            
+            //add score to text
+            scoreText.text = "Score: " + score; 
+            
+            //move box to diffrent position 
+            box.position.x = (Math.random() * 20) - 10;
+            box.position.z = (Math.random() * 20) - 10;
+        })
+    );
 
     return scene;
 }
 
-createScene();
+const scene = createScene();
+
+engine.runRenderLoop(() => {
+    scene.render();
+});
+
+window.addEventListener("resize", () => {
+    engine.resize();
+});

@@ -1,109 +1,119 @@
-window.addEventListener("DOMContentLoaded", function () {
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
 
-    var canvas = document.getElementById("renderCanvas");
-    var engine = new BABYLON.Engine(canvas, true);
 
-   // first scene forest 
-    function createSceneA() {
-        var scene = new BABYLON.Scene(engine);
+let sceneA, sceneB;
+let currentScene;
 
-        var camera = new BABYLON.ArcRotateCamera("camA",
-            Math.PI / 2, Math.PI / 3, 12,
-            new BABYLON.Vector3(0, 1, 0), scene);
-        camera.attachControl(canvas, true);
 
-        var light = new BABYLON.HemisphericLight("lightA",
-            new BABYLON.Vector3(1, 1, 0), scene);
-
-        //the ground
-        var ground = BABYLON.MeshBuilder.CreateGround("groundA",
-            { width: 20, height: 20 }, scene);
-        var gMat = new BABYLON.StandardMaterial("gMatA", scene);
-        gMat.diffuseTexture = new BABYLON.Texture("textures/floor.png", scene);
-        ground.material = gMat;
-
-        // object like tree 
-        var trunk = BABYLON.MeshBuilder.CreateCylinder("trunk",
-            { height: 2, diameter: 0.4 }, scene);
-        trunk.position.y = 1;
-        var tMat = new BABYLON.StandardMaterial("tMat", scene);
-        tMat.diffuseColor = new BABYLON.Color3(0.4, 0.2, 0);
-        trunk.material = tMat;
-
-        var leaves = BABYLON.MeshBuilder.CreateSphere("leaves",
-            { diameter: 2 }, scene);
-        leaves.position.y = 2.5;
-        var lMat = new BABYLON.StandardMaterial("lMat", scene);
-        lMat.diffuseColor = new BABYLON.Color3(0, 0.5, 0);
-        leaves.material = lMat;
-
-        return scene;
+function createSwitchButton(scene, buttonText, targetSceneName) {
+    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
+    
+    const btn = BABYLON.GUI.Button.CreateSimpleButton("switchBtn", buttonText);
+    btn.width = "250px";
+    btn.height = "60px";
+    btn.color = "white";
+    btn.fontSize = 20;
+    btn.fontWeight = "bold";
+    btn.top = "20px";
+    btn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    
+  
+    if (targetSceneName === "lava") {
+        btn.background = "darkred";
+    } else {
+        btn.background = "darkgreen";
     }
 
-    // second scene 
-    function createSceneB() {
-        var scene = new BABYLON.Scene(engine);
-
-        var camera = new BABYLON.ArcRotateCamera("camB",
-            Math.PI / 2, Math.PI / 3, 12,
-            new BABYLON.Vector3(0, 1, 0), scene);
-        camera.attachControl(canvas, true);
-
-        var light = new BABYLON.PointLight("lightB",
-            new BABYLON.Vector3(0, 5, 0), scene);
-        light.diffuse = new BABYLON.Color3(1, 0.3, 0);
-
-        //colored ground 
-        var ground = BABYLON.MeshBuilder.CreateGround("groundB",
-            { width: 20, height: 20 }, scene);
-        var lavaMat = new BABYLON.StandardMaterial("lavaMat", scene);
-        lavaMat.diffuseColor = new BABYLON.Color3(1, 0.2, 0);
-        lavaMat.emissiveColor = new BABYLON.Color3(1, 0.2, 0);
-        ground.material = lavaMat;
-
-        //rock object 
-        var rock = BABYLON.MeshBuilder.CreateSphere("rock",
-            { diameter: 3 }, scene);
-        rock.position.y = 1.5;
-        var rockMat = new BABYLON.StandardMaterial("rockMat", scene);
-        rockMat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        rock.material = rockMat;
-
-        return scene;
-    }
+    advancedTexture.addControl(btn);
 
    
-    var sceneA = createSceneA();
-    var sceneB = createSceneB();
-
-    var currentScene = sceneA;
-
-   //switch buttons 
-    var ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, sceneA);
-
-    var switchBtn = BABYLON.GUI.Button.CreateSimpleButton("switch", "Switch Scene");
-    switchBtn.width = "160px";
-    switchBtn.height = "50px";
-    switchBtn.color = "white";
-    switchBtn.background = "black";
-    switchBtn.top = "20px";
-    ui.addControl(switchBtn);
-
-    switchBtn.onPointerUpObservable.add(() => {
-        if (currentScene === sceneA) {
-            currentScene = sceneB;
+    btn.onPointerUpObservable.add(() => {
+        if (targetSceneName === "lava") {
+            currentScene = sceneB; //go to lava
         } else {
-            currentScene = sceneA;
+            currentScene = sceneA; //go to forest
         }
     });
+}
+
+//forest scene
+function createSceneA() {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.5, 0.8, 0.9); // Blue sky
+
+    const camera = new BABYLON.ArcRotateCamera("camA", Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
+
+    const light = new BABYLON.HemisphericLight("lightA", new BABYLON.Vector3(1, 1, 0), scene);
+
+    const ground = BABYLON.MeshBuilder.CreateGround("groundA", { width: 20, height: 20 }, scene);
+    const gMat = new BABYLON.StandardMaterial("gMatA", scene);
+    gMat.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/grass.png", scene);
+    ground.material = gMat;
 
     
-    engine.runRenderLoop(function () {
-        currentScene.render();
-    });
+    const trunk = BABYLON.MeshBuilder.CreateCylinder("trunk", { height: 2, diameter: 0.4 }, scene);
+    trunk.position.y = 1;
+    const tMat = new BABYLON.StandardMaterial("tMat", scene);
+    tMat.diffuseColor = new BABYLON.Color3(0.4, 0.2, 0);
+    trunk.material = tMat;
 
-    window.addEventListener("resize", () => {
-        engine.resize();
-    });
+   
+    const leaves = BABYLON.MeshBuilder.CreateSphere("leaves", { diameter: 3 }, scene);
+    leaves.position.y = 2.5;
+    const lMat = new BABYLON.StandardMaterial("lMat", scene);
+    lMat.diffuseColor = new BABYLON.Color3(0.1, 0.6, 0.1);
+    leaves.material = lMat;
 
+    // button for lava
+    createSwitchButton(scene, "lava", "lava");
+
+    return scene;
+}
+
+//the lava scene
+function createSceneB() {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.1, 0, 0); 
+
+    const camera = new BABYLON.ArcRotateCamera("camB", Math.PI / 2, Math.PI / 3, 12, BABYLON.Vector3.Zero(), scene);
+    camera.attachControl(canvas, true);
+
+    const light = new BABYLON.PointLight("lightB", new BABYLON.Vector3(0, 5, 0), scene);
+    light.diffuse = new BABYLON.Color3(1, 0.3, 0);
+
+    const ground = BABYLON.MeshBuilder.CreateGround("groundB", { width: 20, height: 20 }, scene);
+    const lavaMat = new BABYLON.StandardMaterial("lavaMat", scene);
+    lavaMat.diffuseColor = new BABYLON.Color3(0.8, 0.1, 0);
+    lavaMat.emissiveColor = new BABYLON.Color3(0.6, 0.1, 0); 
+    ground.material = lavaMat;
+
+    
+    const rock = BABYLON.MeshBuilder.CreateSphere("rock", { diameter: 3 }, scene);
+    rock.position.y = 1.5;
+    const rockMat = new BABYLON.StandardMaterial("rockMat", scene);
+    rockMat.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+    rock.material = rockMat;
+
+    // button for forest 
+    createSwitchButton(scene, "forest", "forest");
+
+    return scene;
+}
+
+
+sceneA = createSceneA();
+sceneB = createSceneB();
+
+//start in forest
+currentScene = sceneA;
+
+
+engine.runRenderLoop(function () {
+    currentScene.render();
+});
+
+window.addEventListener("resize", () => {
+    engine.resize();
 });
