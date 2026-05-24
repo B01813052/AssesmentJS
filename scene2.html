@@ -6,6 +6,8 @@
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
 
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -15,6 +17,92 @@
 
 <canvas id="renderCanvas"></canvas>
 
-<script src="js/scene2.js"></script>
+<script src="js/scene2.js">
+    // Get the canvas element from your HTML
+var canvas = document.getElementById("renderCanvas");
+// Generate the BABYLON 3D engine
+var engine = new BABYLON.Engine(canvas, true);
+
+var createScene = function () {
+    var scene = new BABYLON.Scene(engine);
+
+    // REQUIREMENT 1 & 5: Constrained Camera & 3D Environment Setup
+    // Enable gravity and collisions so the player walks ON the ground, not through it
+    scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
+    scene.collisionsEnabled = true;
+
+    // Create a camera, place it high up, and attach it to the canvas
+    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 30, -50), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+    
+    // Apply constraints to the camera
+    camera.applyGravity = true; 
+    camera.checkCollisions = true;
+    // Make the player collision box a bit bigger so they don't clip into the ground
+    camera.ellipsoid = new BABYLON.Vector3(1, 2, 1); 
+
+    // REQUIREMENT 4: Lighting
+    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.8;
+
+    // REQUIREMENT 3: Height Map
+    // We use a public URL for a heightmap image to automatically generate mountains/valleys
+    var ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "https://playground.babylonjs.com/textures/heightMap.png", {
+        width: 200, 
+        height: 200, 
+        subdivisions: 50, 
+        minHeight: 0, 
+        maxHeight: 20 // How tall the mountains get
+    }, scene);
+    
+    // Make the ground solid and give it a grass texture
+    ground.checkCollisions = true; 
+    var groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMaterial.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/grass.png", scene);
+    ground.material = groundMaterial;
+
+    // REQUIREMENT 2: Cloned Textured Meshes
+    // 1. Create the original box
+    var originalBox = BABYLON.MeshBuilder.CreateBox("box", {size: 4}, scene);
+    
+    // 2. Give it a wood texture
+    var boxMaterial = new BABYLON.StandardMaterial("boxMat", scene);
+    boxMaterial.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/wood.jpg", scene);
+    originalBox.material = boxMaterial;
+
+    // 3. Clone it 15 times using a loop and place them randomly around the map
+    for (var i = 0; i < 15; i++) {
+        var clone = originalBox.clone("clone_" + i);
+        
+        // Randomly scatter them between -40 and 40 on the X and Z axis
+        clone.position.x = (Math.random() * 80) - 40;
+        clone.position.z = (Math.random() * 80) - 40;
+        clone.position.y = 15; // Drop them from the sky so they land on the heightmap
+        
+        // Give the boxes collisions so the camera bumps into them
+        clone.checkCollisions = true;
+    }
+
+    // Hide the original box so we only see the clones (Optional but good practice)
+    originalBox.isVisible = false;
+
+    return scene;
+};
+
+// Call the function to create the scene
+var scene = createScene();
+
+// Run the render loop to keep the game updating
+engine.runRenderLoop(function () {
+    scene.render();
+});
+
+// Resize the canvas if the user resizes their browser window
+window.addEventListener("resize", function () {
+    engine.resize();
+});
+</script>
+
 </body>
 </html>
