@@ -2,19 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scene 3</title>
+    <title>Scene 3 - Physics Player</title>
 
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
 
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #2b2b2b; color: white; text-align: center; margin: 0; padding: 20px; }
+        #renderCanvas { width: 100%; height: 80vh; touch-action: none; border-radius: 10px; box-shadow: 0px 0px 15px black;}
+    </style>
 </head>
 <body>
 
-<h1>Scene 3 Physics</h1>
+    <div class="mb-3">
+        <a href="index.html" class="btn btn-light">⬅ Back to Menu</a>
+        <h1 class="d-inline-block ms-3">Scene 3: Movable Physics Player</h1>
+        <p>Use <strong>W, A, S, D</strong> to move and bump into the boxes!</p>
+    </div>
 
-<canvas id="renderCanvas"></canvas>
+    <canvas id="renderCanvas"></canvas>
 
-<script src="js/scene3.js"></script>
+    <script src="js/scene3.js"></script>
 </body>
 </html>

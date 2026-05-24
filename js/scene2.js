@@ -1,77 +1,69 @@
-window.addEventListener('DOMContentLoaded', function () {
 
-    const canvas = document.getElementById("renderCanvas");
-    const engine = new BABYLON.Engine(canvas, true);
+const canvas = document.getElementById("renderCanvas");
 
-    function createScene() {
-        const scene = new BABYLON.Scene(engine);
-        scene.clearColor = new BABYLON.Color3(0.15, 0.15, 0.2);
+const engine = new BABYLON.Engine(canvas, true);
 
-        // for the scene camera 
-        const camera = new BABYLON.ArcRotateCamera("camera",
-            Math.PI / 2, Math.PI / 3, 12,
-            new BABYLON.Vector3(0, 1, 0),
-            scene);
-        camera.attachControl(canvas, true);
+function createScene() {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color3(0.5, 0.8, 0.9); 
 
-        //for the scene lighting 
-        const light = new BABYLON.SpotLight("spotLight",
-            new BABYLON.Vector3(0, 10, 0),
-            new BABYLON.Vector3(0, -1, 0),
-            Math.PI / 3, 20,
-            scene);
-        light.intensity = 1.2;
+    
+    scene.gravity = new BABYLON.Vector3(0, -0.9, 0);
+    scene.collisionsEnabled = true;
 
-        // ground texture 
-        const ground = BABYLON.MeshBuilder.CreateGround("ground",
-            { width: 12, height: 12 },
-            scene);
+    const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 30, -50), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+    
+    camera.applyGravity = true; 
+    camera.checkCollisions = true;
+    camera.ellipsoid = new BABYLON.Vector3(1, 2, 1); 
 
-        const groundMat = new BABYLON.StandardMaterial("groundMat", scene);
-        groundMat.diffuseColor = new BABYLON.Color3(0.3, 0.5, 0.3);
-        ground.material = groundMat;
+    
+    const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+    light.intensity = 0.8;
 
-        // Sphere with textire
-        const sphere = BABYLON.MeshBuilder.CreateSphere("sphere",
-            { diameter: 2 },
-            scene);
-        sphere.position.y = 1;
-        sphere.position.x = -2;
+    
+    const ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "https://playground.babylonjs.com/textures/heightMap.png", {
+        width: 200, 
+        height: 200, 
+        subdivisions: 50, 
+        minHeight: 0, 
+        maxHeight: 20
+    }, scene);
+    
+    ground.checkCollisions = true; 
+    const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
+    groundMaterial.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/grass.png", scene);
+    ground.material = groundMaterial;
 
-        const sphereMat = new BABYLON.StandardMaterial("sphereMat", scene);
-        sphereMat.diffuseTexture = new BABYLON.Texture(
-            "https://playground.babylonjs.com/textures/earth.jpg",
-            scene);
-        sphere.material = sphereMat;
+    
+    const originalBox = BABYLON.MeshBuilder.CreateBox("box", {size: 4}, scene);
+    const boxMaterial = new BABYLON.StandardMaterial("boxMat", scene);
+    boxMaterial.diffuseTexture = new BABYLON.Texture("https://playground.babylonjs.com/textures/wood.jpg", scene);
+    originalBox.material = boxMaterial;
 
-        //Box with color inbside 
-        const box = BABYLON.MeshBuilder.CreateBox("box",
-            { size: 2 },
-            scene);
-        box.position.y = 1;
-        box.position.x = 2;
-
-        const boxMat = new BABYLON.StandardMaterial("boxMat", scene);
-        boxMat.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.2);
-        box.material = boxMat;
-
-        //Rotation animation 
-        scene.onBeforeRenderObservable.add(function () {
-            box.rotation.y += 0.01;
-            sphere.rotation.y += 0.005;
-        });
-
-        return scene;
+    
+    for (let i = 0; i < 15; i++) {
+        let clone = originalBox.clone("clone_" + i);
+        clone.position.x = (Math.random() * 80) - 40;
+        clone.position.z = (Math.random() * 80) - 40;
+        clone.position.y = 15; 
+        clone.checkCollisions = true;
     }
 
-    const scene = createScene();
+    
+    originalBox.isVisible = false;
 
-    engine.runRenderLoop(function () {
-        scene.render();
-    });
+    return scene;
+}
 
-    window.addEventListener("resize", function () {
-        engine.resize();
-    });
+const scene = createScene();
 
+engine.runRenderLoop(function () {
+    scene.render();
+});
+
+window.addEventListener("resize", function () {
+    engine.resize();
 });
